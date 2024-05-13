@@ -1,0 +1,4 @@
+{"text": "=if($b$44=\"\",\"\",if(iserror(hlookup(i$23,$c$12:g$19,5,false)),\"\",hlookup(i$23,$c$12:g$19,5,false)))\n\u307f\u305f\u3044\u306a\u6761\u4ef6\u5f0f\u66f8\u3044\u3066\u3066\u3084\u3063\u3068\u3067\u304d\u305f\u305c\u30fc\u3068\u601d\u3063\u305f\u77e2\u5148\u306b\u4ed5\u69d8\u5909\u66f4\u3000\u5e30\u3063\u3066\u3044\u3044\u3059\u304b\uff1f\uff1f\uff1f"}
+{"text": "$c just posted a new conference call. listen now: URL"}
+{"text": "rt AT_USER the big banks are underperforming the market today: $db $gs $ms $bac $c $jpm URL"}
+{"text": "citigroup inc. $c rating lowered to strong sell at zacks investment research URL #acn"}
