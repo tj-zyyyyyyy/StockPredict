@@ -12,28 +12,34 @@ def CONFUSION_MATRIX(pred, true):
 def F1_SCORE(pred, true):
     return f1_score(true, pred, average='macro')
 
+
 def ROC_AUC(true, pred_logits, folder_path, i=None):
-    true = label_binarize(true, classes=[0,1,2])
-    for j in range(3): # 对每类
-        fpr, tpr, _ = roc_curve(true[:, j], pred_logits[:, j])
-        roc_auc = auc(fpr, tpr)
-        plt.figure()
-        plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic')
-        plt.legend(loc="lower right")
-        if i is not None:
-            plt.savefig(folder_path + f"{i}_{j}.jpg")  # 保存图片到文件
-        else:
-            plt.savefig(folder_path + f"overall_{j}.jpg")
+    # 计算ROC曲线
+    fpr, tpr, _ = roc_curve(true, pred_logits)
+    # 计算AUC值
+    roc_auc = roc_auc_score(true, pred_logits)
 
-    roc_auc_avg = roc_auc_score(true, pred_logits, average='micro')
+    # 绘制ROC曲线
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
 
-    return roc_auc_avg
+    # 保存图片
+    if i is not None:
+        plt.savefig(folder_path + f"{i}.jpg")  # 保存图片到文件
+    else:
+        plt.savefig(folder_path + f"overall.jpg")
+
+    plt.close()
+
+    # 返回AUC值
+    return roc_auc
 
 
 def metric(pred, true, pred_logits, folder_path, i=None):
