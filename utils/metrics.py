@@ -15,9 +15,9 @@ def F1_SCORE(pred, true):
 
 def ROC_AUC(true, pred_logits, folder_path, i=None):
     # 计算ROC曲线
-    fpr, tpr, _ = roc_curve(true, pred_logits)
+    fpr, tpr, _ = roc_curve(true, pred_logits[1])
     # 计算AUC值
-    roc_auc = roc_auc_score(true, pred_logits)
+    roc_auc = roc_auc_score(true, pred_logits[1])
 
     # 绘制ROC曲线
     plt.figure()

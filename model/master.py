@@ -243,9 +243,9 @@ class Model(nn.Module):
         self.tweet_proj = nn.Linear(config.finbert_hidden_size, self.align_dim)
         self.temp = config.temperature  # temperature
 
-        self.tweet_decoder = nn.Linear(config.finbert_hidden_size, 3)
-        self.stock_decoder = nn.Linear(self.d_model, 3)
-        self.cat_decoder = nn.Linear(2 * self.align_dim, 3)
+        self.tweet_decoder = nn.Linear(config.finbert_hidden_size, 2)
+        self.stock_decoder = nn.Linear(self.d_model, 2)
+        self.cat_decoder = nn.Linear(2 * self.align_dim, 2)
         self.device = _acquire_device(config)
 
     def get_prompt(self, batch_size):
