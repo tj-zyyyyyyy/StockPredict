@@ -3,11 +3,14 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, roc_curv
 from sklearn.preprocessing import label_binarize
 import matplotlib.pyplot as plt
 
+
 def ACC(pred, true):
     return accuracy_score(true, pred)
 
+
 def CONFUSION_MATRIX(pred, true):
     return confusion_matrix(true, pred)
+
 
 def F1_SCORE(pred, true):
     return f1_score(true, pred, average='macro')
@@ -15,9 +18,9 @@ def F1_SCORE(pred, true):
 
 def ROC_AUC(true, pred_logits, folder_path, i=None):
     # 计算ROC曲线
-    fpr, tpr, _ = roc_curve(true, pred_logits[1])
+    fpr, tpr, _ = roc_curve(true, pred_logits[:, 1])
     # 计算AUC值
-    roc_auc = roc_auc_score(true, pred_logits[1])
+    roc_auc = roc_auc_score(true, pred_logits[:, 1])
 
     # 绘制ROC曲线
     plt.figure()
