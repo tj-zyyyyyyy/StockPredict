@@ -58,7 +58,7 @@ class Dataset_Custom(Dataset):
         for file in filenames:
             df_raw = pd.read_csv(os.path.join(self.root_path, file))
             stock_df_raw[file.split('.')[0]] = df_raw
-            non_date_data.append(df_raw[df_raw.columns[1:-1]].values)  # 使用.values将DataFrame转换为NumPy数组
+            non_date_data.append(df_raw[df_raw.columns[1:]].values)  # 使用.values将DataFrame转换为NumPy数组
             df_stamp.append(pd.DatetimeIndex(df_raw[start_border:end_border]['date']).values)
             date_data.append(df_raw[start_border:end_border]['date'].values)
 
@@ -107,7 +107,7 @@ class Dataset_Custom(Dataset):
         pred_begin = seq_end
         pred_end = pred_begin + self.pred_len  # 预测部分
 
-        data_x = self.data[:, seq_begin:seq_end, :]
+        data_x = self.data[:, seq_begin:seq_end, :-1]
         data_y = self.data[:, pred_begin:pred_end, -1:]
         data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
         data_y_stamp = self.data_stamp[:, pred_begin:pred_end, :]

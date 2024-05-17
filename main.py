@@ -11,8 +11,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 parser = argparse.ArgumentParser(description='generating')
 
 # Load data
-parser.add_argument('--root_path', type=str, default='./data/price', help='root path of the data files')
-parser.add_argument('--tweet_path', type=str, default='./data/tweet', help='root path of the tweet files')
+parser.add_argument('--root_path', type=str, default='./data/price1', help='root path of the data files')
+parser.add_argument('--tweet_path', type=str, default='./data/tweet1', help='root path of the tweet files')
 parser.add_argument('--time_length', type=int, default=652, help='length of time stamps')
 parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
 parser.add_argument('--seq_len', type=int, default=3, help='length of input sequence')
@@ -24,16 +24,16 @@ parser.add_argument('--target', type=str, default='OT', help='target feature in 
 
 # Training settings
 parser.add_argument('--num_workers', type=int, default=0, help='data loader num workers')
-parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
+parser.add_argument('--patience', type=int, default=10, help='early stopping patience')
 parser.add_argument('--itr', type=int, default=1, help='experiment times')
-parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=5, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size of train input data')
 parser.add_argument('--learning_rate', type=float, default=0.0005, help='optimizer learning rate')
 parser.add_argument('--weight_decay', type=float, default=0.0000, help='weight decay')
 parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
 
 # master
-parser.add_argument('--d_feat', type=int, default=12, help='feature dimension')
+parser.add_argument('--d_feat', type=int, default=13, help='feature dimension')
 parser.add_argument('--d_model', type=int, default=64, help='model dimension')
 parser.add_argument('--t_nhead', type=int, default=4, help='number of heads in transformer')
 parser.add_argument('--s_nhead', type=int, default=2, help='number of heads in self-attention')
@@ -76,7 +76,7 @@ all_mse = []
 for ii in range(0, args.itr):
     pipeline = Pipeline(args)
     print('>>>>>>>start training : >>>>>>>>>>>>>>>>>>>>>>>>>>')
-    # pipeline.train()
+    pipeline.train()
     print('>>>>>>>start testing : >>>>>>>>>>>>>>>>>>>>>>>>>>')
     acc, conf_matrix, f1score, auc = pipeline.test()
     print('overall result: acc:{}, conf_matrix:{}, f1score:{}, auc:{}'.format(acc, conf_matrix, f1score, auc))

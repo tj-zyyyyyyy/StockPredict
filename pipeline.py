@@ -279,7 +279,7 @@ class Pipeline(object):
 
         preds = np.array(preds)  # [time_step,stock_num]
         trues = np.array(trues)
-        preds_logits = np.array(preds_logits) # [time_step,stock_num,3]
+        preds_logits = np.array(preds_logits)  # [time_step,stock_num,3]
         preds = preds.T
         trues = trues.T
         preds_logits = np.transpose(preds_logits, (1, 0, 2))
@@ -319,7 +319,7 @@ class Pipeline(object):
 
         preds = preds.flatten()
         trues = trues.flatten()
-        preds_logits = np.reshape(preds_logits, (-1, preds_logits.shape[2])) # 按第一维展平成二维
+        preds_logits = np.reshape(preds_logits, (-1, preds_logits.shape[2]))  # 按第一维展平成二维
         overallacc, overallconf_matrix, overallf1score, overallauc = metric(preds, trues, preds_logits, folder_path)
-        
+
         return overallacc, overallconf_matrix, overallf1score, overallauc

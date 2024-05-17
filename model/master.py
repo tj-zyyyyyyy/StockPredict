@@ -54,10 +54,10 @@ class SAttention(nn.Module):
         # FFN layerNorm
         self.norm2 = LayerNorm(d_model, eps=1e-5)
         self.ffn = nn.Sequential(
-            Linear(d_model, 4 * d_model),
+            Linear(d_model, d_model),
             nn.ReLU(),
             Dropout(p=dropout),
-            Linear(4 * d_model, d_model),
+            Linear(d_model, d_model),
             Dropout(p=dropout)
         )
 
@@ -114,10 +114,10 @@ class TAttention(nn.Module):
         self.norm2 = LayerNorm(d_model, eps=1e-5)
         # FFN
         self.ffn = nn.Sequential(
-            Linear(d_model, 4 * d_model),
+            Linear(d_model, d_model),
             nn.ReLU(),
             Dropout(p=dropout),
-            Linear(4 * d_model, d_model),
+            Linear(d_model, d_model),
             Dropout(p=dropout)
         )
 
@@ -276,36 +276,39 @@ class Model(nn.Module):
         data_embedding = self.embedding_layers(src)  # without temporal embed
         temporal_embedding_layer = nn.Linear(x_mark_enc.shape[-1], self.d_model).to(self.device)
         temporal_embedding = temporal_embedding_layer(x_mark_enc)
-        data_embedding += temporal_embedding
+        # data_embedding += temporal_embedding
         data_output = self.attention_layers(data_embedding)
         data_output = data_output.squeeze(dim=1)  # [stock_num,hidden_size=64]
 
         # tweet
-        model = AutoModel.from_pretrained("model/finbert").to(self.device)
-        tweet_output = []
-        position_ids = torch.arange(self.finbert_max_position_embeddings).expand((1, -1)).to(self.device)
-        for stock_tweet in x_tweet:  # [stock_num,daliy_tweet_num,tweet]
-            prompt_past_key_values = self.get_prompt(self.batch_size)
-            prefix_attention_mask = torch.ones(self.batch_size, self.finbert_prefix_len).to(self.device)
-            stock_tweet['attention_mask'] = torch.cat((prefix_attention_mask, stock_tweet['attention_mask']), dim=1)
-            stock_tweet['past_key_values'] = prompt_past_key_values
-            stock_tweet['position_ids'] = position_ids[:, stock_tweet['input_ids'].size()[1] - 1]
-            tweet_output.append(model(**stock_tweet)[0][:, 0, :].squeeze(dim=0))
-        tweet_output = torch.stack(tweet_output)  # [stock_num,hidden_size=768]
+        # model = AutoModel.from_pretrained("model/finbert").to(self.device)
+        # tweet_output = []
+        # position_ids = torch.arange(self.finbert_max_position_embeddings).expand((1, -1)).to(self.device)
+        # for stock_tweet in x_tweet:  # [stock_num,daliy_tweet_num,tweet]
+        #     prompt_past_key_values = self.get_prompt(self.batch_size)
+        #     prefix_attention_mask = torch.ones(self.batch_size, self.finbert_prefix_len).to(self.device)
+        #     stock_tweet['attention_mask'] = torch.cat((prefix_attention_mask, stock_tweet['attention_mask']), dim=1)
+        #     stock_tweet['past_key_values'] = prompt_past_key_values
+        #     stock_tweet['position_ids'] = position_ids[:, stock_tweet['input_ids'].size()[1] - 1]
+        #     tweet_output.append(model(**stock_tweet)[0][:, 0, :].squeeze(dim=0))
+        # tweet_output = torch.stack(tweet_output)  # [stock_num,hidden_size=768]
 
-        # align
-        stock_align = torch.tanh(self.stock_proj(data_output))  # [stock_num,dim_align]
-        tweet_align = torch.tanh(self.tweet_proj(tweet_output))  # [stock_num,dim_align]
+        # # align
+        # stock_align = torch.tanh(self.stock_proj(data_output))  # [stock_num,dim_align]
+        # tweet_align = torch.tanh(self.tweet_proj(tweet_output))  # [stock_num,dim_align]
 
-        sim = (tweet_align @ stock_align.T) / self.temp  # [stock_num,stock_num] sim_ij=tweet_h_i*data_h_j
-        stock_num = sim.shape[0]
+        # sim = (tweet_align @ stock_align.T) / self.temp  # [stock_num,stock_num] sim_ij=tweet_h_i*data_h_j
+        # stock_num = sim.shape[0]
 
-        align_loss = -torch.log(
-            torch.softmax(sim, dim=1)[torch.arange(stock_num), torch.arange(stock_num)]).mean() - torch.log(
-            torch.softmax(sim, dim=0)[torch.arange(stock_num), torch.arange(stock_num)]).mean()
+        # align_loss = -torch.log(
+        #     torch.softmax(sim, dim=1)[torch.arange(stock_num), torch.arange(stock_num)]).mean() - torch.log(
+        #     torch.softmax(sim, dim=0)[torch.arange(stock_num), torch.arange(stock_num)]).mean()
 
-        tweet_pred = self.tweet_decoder(tweet_output)
+        # tweet_pred = self.tweet_decoder(tweet_output)
         data_pred = self.stock_decoder(data_output)
-        cat_pred = self.cat_decoder(torch.cat([tweet_align, stock_align], dim=-1))  # [stock_num,2]
+        # cat_pred = self.cat_decoder(torch.cat([tweet_align, stock_align], dim=-1))  # [stock_num,2]
+        tweet_pred = data_pred
+        cat_pred = data_pred
+        align_loss = 0
 
         return tweet_pred, data_pred, cat_pred, align_loss
