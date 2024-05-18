@@ -37,7 +37,6 @@ class Dataset_Custom(Dataset):
         self.tweet_path = tweet_path
         self.__read_data__()  # 调用__read_data__函数读取数据
 
-    # 一次读一个股票
     def __read_data__(self):
         self.scaler = StandardScaler()
         stock_df_raw = {}
@@ -67,14 +66,12 @@ class Dataset_Custom(Dataset):
         df_stamp = np.array(df_stamp)
         date_data = np.array(date_data)
 
-        # train_data = non_date_data[:, start_borders[0]:end_borders[0],:]
-        # 用训练集的mean和std来标准化数据集
-        # self.scaler.fit(train_data)
-        # data = self.scaler.transform(non_date_data)
         # 提取日期特征
         data_stamp = time_features(df_stamp)
         # 在下面分seq_len和pred_len
-        self.data = non_date_data[:, start_border:end_border, :]
+        train_data= non_date_data[:, start_border:end_border, :]
+        #self.scaler.fit(train_data)
+        self.data = self.scaler.transform(train_data)
         self.data_stamp = data_stamp
 
         # 获取对应新闻
@@ -98,7 +95,8 @@ class Dataset_Custom(Dataset):
                 onestock_tweet_data.append(tweet_data_oneday)
             tweet_data.append(onestock_tweet_data)
 
-        tweet_data_padded = [tokenizer(sublist, return_tensors="pt", padding=True, truncation=True).data for sublist in tweet_data]  # token
+        tweet_data_padded = [tokenizer(sublist, return_tensors="pt", padding=True, truncation=True).data for sublist in
+                             tweet_data]  # token
         self.tweet_data = tweet_data_padded
 
     def __getitem__(self, index):
@@ -107,16 +105,18 @@ class Dataset_Custom(Dataset):
         pred_begin = seq_end
         pred_end = pred_begin + self.pred_len  # 预测部分
 
-        data_x = self.data[:, seq_begin:seq_end, :-1]
+        # data_x = np.concatenate((self.data[:, seq_begin:seq_end, :-1], self.data[:, seq_end + 2:seq_end + 3, :-1]), axis=1)
+        data_x = self.data[:, seq_begin:seq_end, 5:-2]
         data_y = self.data[:, pred_begin:pred_end, -1:]
+        # data_x_stamp = np.concatenate((self.data_stamp[:, seq_begin:seq_end, :-1], self.data_stamp[:, seq_end + 2:seq_end + 3, :-1]), axis=1)
         data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
         data_y_stamp = self.data_stamp[:, pred_begin:pred_end, :]
 
         tweet_data_x = []
-        for one_stock_tweet in self.tweet_data: # dict [time,tweet]
+        for one_stock_tweet in self.tweet_data:  # dict [time,tweet]
             one_stock_dict = {}
-            for key,val in one_stock_tweet.items():
-                one_stock_dict[key] = val[seq_end-1] # 新闻只取前一天的
+            for key, val in one_stock_tweet.items():
+                one_stock_dict[key] = val[seq_end - 1]  # 新闻只取前一天的
             tweet_data_x.append(one_stock_dict)
 
         return data_x, data_y, data_x_stamp, data_y_stamp, tweet_data_x

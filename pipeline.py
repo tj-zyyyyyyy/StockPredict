@@ -100,7 +100,7 @@ class Pipeline(object):
                                                                              batch_y_mark, batch_tweet_data_x)
                 f_dim = -1 if self.args.features == 'MS' else 0
                 y_out = batch_y.squeeze(dim=0)
-                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2) + 1).squeeze(dim=1).long().to(
+                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
                     self.device)
                 outputs = self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred
 
@@ -163,7 +163,7 @@ class Pipeline(object):
 
                         f_dim = -1 if self.args.features == 'MS' else 0
                         y_out = batch_y.squeeze(dim=0)
-                        y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2) + 1).squeeze(dim=1).long().to(
+                        y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
                             self.device)
                         tweet_loss = criterion(tweet_pred, y_out)
                         data_loss = criterion(data_pred, y_out)
@@ -177,7 +177,7 @@ class Pipeline(object):
 
                     f_dim = -1 if self.args.features == 'MS' else 0
                     y_out = batch_y.squeeze(dim=0)
-                    y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2) + 1).squeeze(dim=1).long().to(
+                    y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
                         self.device)
                     tweet_loss = criterion(tweet_pred, y_out)
                     data_loss = criterion(data_pred, y_out)
@@ -190,6 +190,7 @@ class Pipeline(object):
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     print("\tdata_loss: {0:.7f}, tweet_loss: {1:.7f} | cat_loss: {2:.7f} | align_loss: {3:.7f}".format(
                         data_loss, tweet_loss, cat_loss, align_loss))
+                    # print(torch.softmax(data_pred, dim=-1))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
@@ -203,6 +204,11 @@ class Pipeline(object):
                 else:
                     loss.backward()
                     model_optim.step()
+
+                # 打印梯度
+                # for name, param in self.model.named_parameters():
+                #     if param.grad is not None:
+                #         print(name, param.grad.data.norm(2).item())
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
@@ -258,7 +264,7 @@ class Pipeline(object):
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 y_out = batch_y.squeeze(dim=0)
-                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2) + 1).squeeze(dim=1).long().to(
+                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
                     self.device)
                 tweet_out = torch.softmax(tweet_pred, dim=-1)
                 data_out = torch.softmax(data_pred, dim=-1)

@@ -54,10 +54,10 @@ class SAttention(nn.Module):
         # FFN layerNorm
         self.norm2 = LayerNorm(d_model, eps=1e-5)
         self.ffn = nn.Sequential(
-            Linear(d_model, d_model),
-            nn.ReLU(),
+            Linear(d_model, 4 * d_model),
+            nn.GELU(),
             Dropout(p=dropout),
-            Linear(d_model, d_model),
+            Linear(4 * d_model, d_model),
             Dropout(p=dropout)
         )
 
@@ -114,10 +114,10 @@ class TAttention(nn.Module):
         self.norm2 = LayerNorm(d_model, eps=1e-5)
         # FFN
         self.ffn = nn.Sequential(
-            Linear(d_model, d_model),
-            nn.ReLU(),
+            Linear(d_model, 4 * d_model),
+            nn.GELU(),
             Dropout(p=dropout),
-            Linear(d_model, d_model),
+            Linear(4 * d_model, d_model),
             Dropout(p=dropout)
         )
 
@@ -276,10 +276,12 @@ class Model(nn.Module):
         data_embedding = self.embedding_layers(src)  # without temporal embed
         temporal_embedding_layer = nn.Linear(x_mark_enc.shape[-1], self.d_model).to(self.device)
         temporal_embedding = temporal_embedding_layer(x_mark_enc)
-        # data_embedding += temporal_embedding
-        data_output = self.attention_layers(data_embedding)
+        data_embedding += temporal_embedding
+        # print(data_embedding)
+        for i in range(8):
+            data_output = self.attention_layers(data_embedding)
         data_output = data_output.squeeze(dim=1)  # [stock_num,hidden_size=64]
-
+        # print(data_output)
         # tweet
         # model = AutoModel.from_pretrained("model/finbert").to(self.device)
         # tweet_output = []
