@@ -3,7 +3,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from data_loader import Dataset_Custom
 from model import master
-from utils.tools import EarlyStopping, adjust_learning_rate, visual
+from utils.tools import EarlyStopping, adjust_learning_rate
 from utils.metrics import metric
 import numpy as np
 import os
@@ -204,11 +204,6 @@ class Pipeline(object):
                 else:
                     loss.backward()
                     model_optim.step()
-
-                # 打印梯度
-                # for name, param in self.model.named_parameters():
-                #     if param.grad is not None:
-                #         print(name, param.grad.data.norm(2).item())
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)

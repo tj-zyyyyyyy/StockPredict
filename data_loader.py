@@ -1,27 +1,10 @@
 import os
 import pandas as pd
-import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from utils.timefeatures import time_features
 import json
 import numpy as np
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
-
-class StandardScaler(object):
-    def __init__(self):
-        self.mean = 0.
-        self.std = 1.
-
-    def fit(self, data):
-        self.mean = data.mean(0)
-        self.std = data.std(0)
-
-    def transform(self, data):
-        mean = torch.from_numpy(self.mean).type_as(data).to(data.device) if torch.is_tensor(data) else self.mean
-        std = torch.from_numpy(self.std).type_as(data).to(data.device) if torch.is_tensor(data) else self.std
-        return (data - mean) / std
-
+from transformers import AutoTokenizer
 
 class Dataset_Custom(Dataset):
     def __init__(self, root_path, tweet_path, time_length, flag='train', size=None):
@@ -38,7 +21,6 @@ class Dataset_Custom(Dataset):
         self.__read_data__()  # 调用__read_data__函数读取数据
 
     def __read_data__(self):
-        self.scaler = StandardScaler()
         stock_df_raw = {}
         filenames = os.listdir(self.root_path)
         length = self.time_length
@@ -65,13 +47,9 @@ class Dataset_Custom(Dataset):
         non_date_data = np.array(non_date_data)
         df_stamp = np.array(df_stamp)
         date_data = np.array(date_data)
-
         # 提取日期特征
         data_stamp = time_features(df_stamp)
-        # 在下面分seq_len和pred_len
-        train_data= non_date_data[:, start_border:end_border, :]
-        #self.scaler.fit(train_data)
-        self.data = self.scaler.transform(train_data)
+        self.data = non_date_data[:, start_border:end_border, :]
         self.data_stamp = data_stamp
 
         # 获取对应新闻
@@ -105,11 +83,11 @@ class Dataset_Custom(Dataset):
         pred_begin = seq_end
         pred_end = pred_begin + self.pred_len  # 预测部分
 
-        # data_x = np.concatenate((self.data[:, seq_begin:seq_end, :-1], self.data[:, seq_end + 2:seq_end + 3, :-1]), axis=1)
-        data_x = self.data[:, seq_begin:seq_end, 5:-2]
+        data_x = np.concatenate((self.data[:, seq_begin:seq_end, :-3], self.data[:, seq_end + 2:seq_end + 3, :-3]), axis=1)
+        # data_x = self.data[:, seq_begin:seq_end, :-3]
         data_y = self.data[:, pred_begin:pred_end, -1:]
-        # data_x_stamp = np.concatenate((self.data_stamp[:, seq_begin:seq_end, :-1], self.data_stamp[:, seq_end + 2:seq_end + 3, :-1]), axis=1)
-        data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
+        data_x_stamp = np.concatenate((self.data_stamp[:, seq_begin:seq_end, :], self.data_stamp[:, seq_end + 2:seq_end + 3, :]), axis=1)
+        # data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
         data_y_stamp = self.data_stamp[:, pred_begin:pred_end, :]
 
         tweet_data_x = []

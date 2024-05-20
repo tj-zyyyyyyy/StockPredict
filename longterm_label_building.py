@@ -17,7 +17,7 @@ for file in files:
     df = pd.read_csv(os.path.join(folder_path, file))
 
     # 初始化新列
-    df['label_for_week'] = -1
+    df['label'] = 0
 
     # 对每一行进行操作
     for i in range(len(df) - length + 1):
@@ -30,12 +30,12 @@ for file in files:
 
         # 如果斜率k>=0，将label_for_week设为1
         if reg.coef_[0] >= 0:
-            df.loc[i, 'label_for_week'] = 0
+            df.loc[i, 'label'] = 1
             count_1 += 1
         else:
             count_0 += 1
 
-    # 删除最后六行
+    # 删除最后6行
     df = df.iloc[:-length+1]
 
     # 保存修改后的csv文件

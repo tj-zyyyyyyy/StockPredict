@@ -1,20 +1,14 @@
-import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, roc_curve, roc_auc_score, auc
-from sklearn.preprocessing import label_binarize
 import matplotlib.pyplot as plt
-
 
 def ACC(pred, true):
     return accuracy_score(true, pred)
 
-
 def CONFUSION_MATRIX(pred, true):
     return confusion_matrix(true, pred)
 
-
 def F1_SCORE(pred, true):
     return f1_score(true, pred, average='macro')
-
 
 def ROC_AUC(true, pred_logits, folder_path, i=None):
     # 计算ROC曲线
