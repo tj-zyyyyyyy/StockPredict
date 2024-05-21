@@ -242,9 +242,9 @@ class Model(nn.Module):
         self.tweet_proj = nn.Linear(config.finbert_hidden_size, self.align_dim)
         self.temp = config.temperature  # temperature
 
-        self.tweet_decoder = nn.Linear(config.finbert_hidden_size, 2)
-        self.stock_decoder = nn.Linear(self.d_model, 2)
-        self.cat_decoder = nn.Linear(2 * self.align_dim, 2)
+        self.tweet_decoder = nn.Linear(config.finbert_hidden_size, 1)
+        self.stock_decoder = nn.Linear(self.d_model, 1)
+        self.cat_decoder = nn.Linear(2 * self.align_dim, 1)
         self.device = _acquire_device(config)
 
     def get_prompt(self, batch_size):
@@ -303,8 +303,8 @@ class Model(nn.Module):
             torch.softmax(sim, dim=1)[torch.arange(stock_num), torch.arange(stock_num)]).mean() - torch.log(
             torch.softmax(sim, dim=0)[torch.arange(stock_num), torch.arange(stock_num)]).mean()
 
-        tweet_pred = self.tweet_decoder(tweet_output)
-        data_pred = self.stock_decoder(data_output)
-        cat_pred = self.cat_decoder(torch.cat([tweet_align, stock_align], dim=-1))  # [stock_num,2]
+        tweet_pred = torch.sigmoid(self.tweet_decoder(tweet_output)).squeeze(dim=1)
+        data_pred = torch.sigmoid(self.stock_decoder(data_output)).squeeze(dim=1)
+        cat_pred = torch.sigmoid(self.cat_decoder(torch.cat([tweet_align, stock_align], dim=-1))).squeeze(dim=1)  # [stock_num]
 
         return tweet_pred, data_pred, cat_pred, align_loss

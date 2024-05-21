@@ -8,8 +8,8 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 parser = argparse.ArgumentParser(description='generating')
 
 # Load data
-parser.add_argument('--root_path', type=str, default='./data/price', help='root path of the data files')
-parser.add_argument('--tweet_path', type=str, default='./data/tweet', help='root path of the tweet files')
+parser.add_argument('--root_path', type=str, default='./data/price1', help='root path of the data files')
+parser.add_argument('--tweet_path', type=str, default='./data/tweet1', help='root path of the tweet files')
 parser.add_argument('--time_length', type=int, default=637, help='length of time stamps')
 parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
 parser.add_argument('--seq_len', type=int, default=8, help='length of input sequence')
@@ -75,6 +75,6 @@ for ii in range(0, args.itr):
     print('>>>>>>>start training : >>>>>>>>>>>>>>>>>>>>>>>>>>')
     pipeline.train()
     print('>>>>>>>start testing : >>>>>>>>>>>>>>>>>>>>>>>>>>')
-    acc, conf_matrix, f1score, auc = pipeline.test()
-    print('overall result: acc:{}, conf_matrix:{}, f1score:{}, auc:{}'.format(acc, conf_matrix, f1score, auc))
+    acc, mcc, conf_matrix, f1score, auc = pipeline.test()
+    print('overall result: acc:{}, mcc:{}, conf_matrix:{}, f1score:{}, auc:{}'.format(acc, mcc, conf_matrix, f1score, auc))
     torch.cuda.empty_cache()  # 清空CUDA缓存，释放GPU内存

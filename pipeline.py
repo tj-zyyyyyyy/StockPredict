@@ -71,7 +71,7 @@ class Pipeline(object):
     # 选择损失函数的函数
     def _select_criterion(self):
         # 使用均方误差损失函数
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.BCELoss()
         return criterion
 
     def vali(self, vali_data, vali_loader, criterion):
@@ -100,7 +100,7 @@ class Pipeline(object):
                                                                              batch_y_mark, batch_tweet_data_x)
                 f_dim = -1 if self.args.features == 'MS' else 0
                 y_out = batch_y.squeeze(dim=0)
-                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
+                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                     self.device)
                 outputs = self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred
 
@@ -163,7 +163,7 @@ class Pipeline(object):
 
                         f_dim = -1 if self.args.features == 'MS' else 0
                         y_out = batch_y.squeeze(dim=0)
-                        y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
+                        y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                             self.device)
                         tweet_loss = criterion(tweet_pred, y_out)
                         data_loss = criterion(data_pred, y_out)
@@ -177,7 +177,7 @@ class Pipeline(object):
 
                     f_dim = -1 if self.args.features == 'MS' else 0
                     y_out = batch_y.squeeze(dim=0)
-                    y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
+                    y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                         self.device)
                     tweet_loss = criterion(tweet_pred, y_out)
                     data_loss = criterion(data_pred, y_out)
@@ -259,14 +259,14 @@ class Pipeline(object):
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 y_out = batch_y.squeeze(dim=0)
-                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).long().to(
+                y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                     self.device)
-                tweet_out = torch.softmax(tweet_pred, dim=-1)
-                data_out = torch.softmax(data_pred, dim=-1)
-                cat_out = torch.softmax(cat_pred, dim=-1)
-                outputs = self.args.alpha_tweet_loss * tweet_out + self.args.alpha_data_loss * data_out + self.args.alpha_cat_loss * cat_out
-                outputs_logits = torch.softmax(outputs, dim=-1)
-                outputs = outputs.argmax(dim=-1)
+                tweet_out = (tweet_pred>=0.5).float()
+                data_out = (data_pred>=0.5).float()
+                cat_out = (cat_pred>=0.5).float()
+                outputs = (self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred)/(self.args.alpha_tweet_loss+self.args.alpha_data_loss+self.args.alpha_cat_loss)
+                outputs_logits = outputs
+                outputs = (outputs>=0.5).float()
                 outputs_logits = outputs_logits.detach().cpu().numpy()
                 outputs = outputs.detach().cpu().numpy()
                 y_out = y_out.detach().cpu().numpy()
@@ -280,10 +280,10 @@ class Pipeline(object):
 
         preds = np.array(preds)  # [time_step,stock_num]
         trues = np.array(trues)
-        preds_logits = np.array(preds_logits)  # [time_step,stock_num,3]
+        preds_logits = np.array(preds_logits)  # [time_step,stock_num]
         preds = preds.T
         trues = trues.T
-        preds_logits = np.transpose(preds_logits, (1, 0, 2))
+        preds_logits = preds_logits.T
         print('test shape:', preds.shape, trues.shape)
 
         # result save
@@ -292,6 +292,7 @@ class Pipeline(object):
             os.makedirs(folder_path)
 
         all_acc = []
+        all_mcc = []
         all_conf_matrix = []
         all_f1score = []
         all_auc = []
@@ -300,18 +301,20 @@ class Pipeline(object):
             pred = preds[i]
             true = trues[i]
             pred_logits = preds_logits[i]
-            acc, conf_matrix, f1score, auc = metric(pred, true, pred_logits, folder_path, i)
-            print('acc:{}, f1score:{}, auc:{}'.format(acc, f1score, auc))
-            f.write('acc:{}, f1score:{}, auc:{}'.format(acc, f1score, auc))
+            acc, mcc, conf_matrix, f1score, auc = metric(pred, true, pred_logits, folder_path, i)
+            print('acc:{}, mcc:{}, f1score:{}, auc:{}'.format(acc, mcc, f1score, auc))
+            f.write('acc:{}, mcc:{}, f1score:{}, auc:{}'.format(acc, mcc, f1score, auc))
             f.write('\n')
             f.write('\n')
             all_acc.append(acc)
+            all_mcc.append(mcc)
             all_conf_matrix.append(conf_matrix)
             all_f1score.append(f1score)
             all_auc.append(auc)
         f.close()
 
         np.save(folder_path + 'acc.npy', all_acc)
+        np.save(folder_path + 'mcc.npy', all_mcc)
         np.save(folder_path + 'conf_matrix.npy', all_conf_matrix)
         np.save(folder_path + 'f1score.npy', all_f1score)
         np.save(folder_path + 'auc.npy', all_auc)
@@ -320,7 +323,7 @@ class Pipeline(object):
 
         preds = preds.flatten()
         trues = trues.flatten()
-        preds_logits = np.reshape(preds_logits, (-1, preds_logits.shape[2]))  # 按第一维展平成二维
-        overallacc, overallconf_matrix, overallf1score, overallauc = metric(preds, trues, preds_logits, folder_path)
+        preds_logits = preds_logits.flatten()
+        overallacc, overallmcc, overallconf_matrix, overallf1score, overallauc = metric(preds, trues, preds_logits, folder_path)
 
-        return overallacc, overallconf_matrix, overallf1score, overallauc
+        return overallacc, overallmcc, overallconf_matrix, overallf1score, overallauc

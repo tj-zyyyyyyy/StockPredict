@@ -16,6 +16,9 @@ for file in files:
     # 读取csv文件
     df = pd.read_csv(os.path.join(folder_path, file))
 
+    df = df.loc[df['date'] >= '2014-01-01']
+    df = df.reset_index(drop=True)
+
     # 初始化新列
     df['label'] = 0
 

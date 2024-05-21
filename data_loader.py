@@ -83,11 +83,9 @@ class Dataset_Custom(Dataset):
         pred_begin = seq_end
         pred_end = pred_begin + self.pred_len  # 预测部分
 
-        data_x = np.concatenate((self.data[:, seq_begin:seq_end, :-3], self.data[:, seq_end + 2:seq_end + 3, :-3]), axis=1)
-        # data_x = self.data[:, seq_begin:seq_end, :-3]
-        data_y = self.data[:, pred_begin:pred_end, -1:]
-        data_x_stamp = np.concatenate((self.data_stamp[:, seq_begin:seq_end, :], self.data_stamp[:, seq_end + 2:seq_end + 3, :]), axis=1)
-        # data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
+        data_x = self.data[:, seq_begin:seq_end, :-2]
+        data_y = self.data[:, pred_begin:pred_end, -2:-1]
+        data_x_stamp = self.data_stamp[:, seq_begin:seq_end, :]
         data_y_stamp = self.data_stamp[:, pred_begin:pred_end, :]
 
         tweet_data_x = []
