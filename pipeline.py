@@ -102,9 +102,16 @@ class Pipeline(object):
                 y_out = batch_y.squeeze(dim=0)
                 y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                     self.device)
-                outputs = self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred
+                tweet_out = (tweet_pred >= 0.5).float()
+                data_out = (data_pred >= 0.5).float()
+                cat_out = (cat_pred >= 0.5).float()
+                outputs = (
+                                      self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred) / (
+                                      self.args.alpha_tweet_loss + self.args.alpha_data_loss + self.args.alpha_cat_loss)
+                outputs_logits = outputs
+                outputs = (outputs >= 0.5).float()
 
-                pred = outputs.detach().cpu()
+                pred = outputs_logits.detach().cpu()
                 true = y_out.detach().cpu()
 
                 loss = criterion(pred, true)
@@ -261,12 +268,14 @@ class Pipeline(object):
                 y_out = batch_y.squeeze(dim=0)
                 y_out = (y_out[:, -self.args.pred_len:, f_dim:].squeeze(dim=2)).squeeze(dim=1).float().to(
                     self.device)
-                tweet_out = (tweet_pred>=0.5).float()
-                data_out = (data_pred>=0.5).float()
-                cat_out = (cat_pred>=0.5).float()
-                outputs = (self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred)/(self.args.alpha_tweet_loss+self.args.alpha_data_loss+self.args.alpha_cat_loss)
+                tweet_out = (tweet_pred >= 0.5).float()
+                data_out = (data_pred >= 0.5).float()
+                cat_out = (cat_pred >= 0.5).float()
+                outputs = (
+                                      self.args.alpha_tweet_loss * tweet_pred + self.args.alpha_data_loss * data_pred + self.args.alpha_cat_loss * cat_pred) / (
+                                      self.args.alpha_tweet_loss + self.args.alpha_data_loss + self.args.alpha_cat_loss)
                 outputs_logits = outputs
-                outputs = (outputs>=0.5).float()
+                outputs = (outputs >= 0.5).float()
                 outputs_logits = outputs_logits.detach().cpu().numpy()
                 outputs = outputs.detach().cpu().numpy()
                 y_out = y_out.detach().cpu().numpy()
@@ -324,6 +333,7 @@ class Pipeline(object):
         preds = preds.flatten()
         trues = trues.flatten()
         preds_logits = preds_logits.flatten()
-        overallacc, overallmcc, overallconf_matrix, overallf1score, overallauc = metric(preds, trues, preds_logits, folder_path)
+        overallacc, overallmcc, overallconf_matrix, overallf1score, overallauc = metric(preds, trues, preds_logits,
+                                                                                        folder_path)
 
         return overallacc, overallmcc, overallconf_matrix, overallf1score, overallauc

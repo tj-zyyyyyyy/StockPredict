@@ -1,8 +1,11 @@
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, roc_curve, roc_auc_score, auc
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, roc_curve, roc_auc_score, auc, matthews_corrcoef
 import matplotlib.pyplot as plt
 
 def ACC(pred, true):
     return accuracy_score(true, pred)
+
+def MCC(pred, true):
+    return matthews_corrcoef(true, pred)
 
 def CONFUSION_MATRIX(pred, true):
     return confusion_matrix(true, pred)
@@ -12,9 +15,9 @@ def F1_SCORE(pred, true):
 
 def ROC_AUC(true, pred_logits, folder_path, i=None):
     # 计算ROC曲线
-    fpr, tpr, _ = roc_curve(true, pred_logits[:, 1])
+    fpr, tpr, _ = roc_curve(true, pred_logits)
     # 计算AUC值
-    roc_auc = roc_auc_score(true, pred_logits[:, 1])
+    roc_auc = roc_auc_score(true, pred_logits)
 
     # 绘制ROC曲线
     plt.figure()
@@ -41,8 +44,9 @@ def ROC_AUC(true, pred_logits, folder_path, i=None):
 
 def metric(pred, true, pred_logits, folder_path, i=None):
     acc = ACC(pred, true)
+    mcc = MCC(pred, true)
     conf_matrix = CONFUSION_MATRIX(pred, true)
     f1score = F1_SCORE(pred, true)
     auc = ROC_AUC(true, pred_logits, folder_path, i)
 
-    return acc, conf_matrix, f1score, auc
+    return acc, mcc, conf_matrix, f1score, auc

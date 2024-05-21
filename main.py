@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description='generating')
 # Load data
 parser.add_argument('--root_path', type=str, default='./data/price1', help='root path of the data files')
 parser.add_argument('--tweet_path', type=str, default='./data/tweet1', help='root path of the tweet files')
-parser.add_argument('--time_length', type=int, default=637, help='length of time stamps')
+parser.add_argument('--time_length', type=int, default=500, help='length of time stamps')
 parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
 parser.add_argument('--seq_len', type=int, default=8, help='length of input sequence')
 parser.add_argument('--pred_len', type=int, default=1, help='prediction sequence length')
